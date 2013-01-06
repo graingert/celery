@@ -202,7 +202,9 @@ class Batches(Task):
 
             if self._tref is None:     # first request starts flush timer.
                 self._tref = timer.apply_interval(self.flush_interval * 1000.0,
-                                                  flush_buffer)
+                                            flush_buffer)
+                if self._tref is None:
+                    logger.warn('timer returned a NoneType!')
 
             if not self._count() % self.flush_every:
                 flush_buffer()
@@ -221,7 +223,7 @@ class Batches(Task):
             if requests:
                 logger.debug('Batches: Buffer complete: %s', len(requests))
                 self.flush(requests)
-        if not requests:
+        if not requests and self._tref is not None:
             logger.debug('Batches: Cancelling timer: Nothing in buffer.')
             self._tref.cancel()  # cancel timer.
             self._tref = None
